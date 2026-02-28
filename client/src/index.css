@@ -1,0 +1,7 @@
+/* -----------------------------------------------
+   index.css — Global Styles + Tailwind CSS Import
+   ----------------------------------------------- */
+
+/* Tailwind CSS v4 — single import line */
+@import "tailwindcss";
+

@@ -1,0 +1,43 @@
+# -----------------------------------------------
+# serverless.yml — AWS Lambda + API Gateway Config
+# -----------------------------------------------
+# Deploys the Express backend as a single Lambda function
+# behind API Gateway (HTTP API — free tier friendly).
+# -----------------------------------------------
+
+service: devdosthub
+frameworkVersion: '3'
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1          # Mumbai (closest to you — change if needed)
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 30                 # seconds (Gemini calls may take a few seconds)
+  environment:
+    MONGO_URI: ${env:MONGO_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
+    GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+
+functions:
+  api:
+    handler: server.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: ANY
+
+package:
+  excludeDevDependencies: true
+  patterns:
+    - "!client/**"
+    - "!mobile/**"
+    - "!node_modules/.cache/**"
+    - "!.git/**"
+    - "!*.md"
