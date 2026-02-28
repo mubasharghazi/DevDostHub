@@ -1,14 +1,25 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event_model.dart';
 import '../models/user_model.dart';
 
 class ApiService {
-  // Auto-detect URL based on platform
+  // Live backend URL (AWS Lambda)
+  static const String _liveUrl =
+      'https://4y2z4p1e6h.execute-api.ap-south-1.amazonaws.com/api';
+
+  // Set to true to use local backend during development
+  static const bool _useLocal = false;
+
   static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:5000/api';
-    return 'http://10.0.2.2:5000/api';
+    if (_useLocal) {
+      // Web browser → localhost, Android emulator → 10.0.2.2
+      if (kIsWeb) return 'http://localhost:5000/api';
+      return 'http://10.0.2.2:5000/api';
+    }
+    return _liveUrl;
   }
 
   // JWT token stored in memory (persists during app session)
@@ -25,9 +36,53 @@ class ApiService {
     if (_token != null) 'Authorization': 'Bearer $_token',
   };
 
-  static void logout() {
+  // -----------------------------------------------
+  // Session Persistence
+  // -----------------------------------------------
+  static Future<void> saveSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_token != null) {
+      await prefs.setString('auth_token', _token!);
+    }
+    if (_currentUser != null) {
+      await prefs.setString('user_data', jsonEncode(_currentUser!.toJson()));
+    }
+  }
+
+  static Future<bool> loadSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedToken = prefs.getString('auth_token');
+    final savedUser = prefs.getString('user_data');
+    if (savedToken != null && savedUser != null) {
+      _token = savedToken;
+      try {
+        _currentUser = UserModel.fromJson(jsonDecode(savedUser));
+        // Verify token is still valid by fetching profile
+        final profile = await getMyProfile();
+        if (profile != null) {
+          return true;
+        }
+        // Token expired — clear
+        await clearSession();
+        return false;
+      } catch (_) {
+        await clearSession();
+        return false;
+      }
+    }
+    return false;
+  }
+
+  static Future<void> clearSession() async {
     _token = null;
     _currentUser = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
+  }
+
+  static void logout() {
+    clearSession();
   }
 
   // -----------------------------------------------
@@ -58,6 +113,7 @@ class ApiService {
       if (response.statusCode == 201) {
         _token = data['token'];
         _currentUser = UserModel.fromJson(data['data']);
+        await saveSession();
         return {'success': true, 'user': data['data']};
       }
       return {
@@ -88,6 +144,7 @@ class ApiService {
       if (response.statusCode == 200) {
         _token = data['token'];
         _currentUser = UserModel.fromJson(data['data']);
+        await saveSession();
         return {'success': true, 'user': data['data']};
       }
       return {'success': false, 'message': data['message'] ?? 'Login failed'};

@@ -5,7 +5,7 @@
 # behind API Gateway (HTTP API — free tier friendly).
 # -----------------------------------------------
 
-service: devdosthub
+service: tech-community-hub  # keep this name to match existing AWS deployment
 frameworkVersion: '3'
 
 useDotenv: true

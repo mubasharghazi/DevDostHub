@@ -39,6 +39,7 @@ class UserModel {
   }
 
   Map<String, dynamic> toJson() => {
+    '_id': id,
     'name': name,
     'email': email,
     'role': role,
@@ -47,6 +48,7 @@ class UserModel {
     'avatar': avatar,
     'github': github,
     'linkedin': linkedin,
+    'createdAt': createdAt,
   };
 
   String get initials {

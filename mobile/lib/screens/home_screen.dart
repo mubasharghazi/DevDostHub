@@ -50,25 +50,50 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleRSVP(String eventId) async {
-    final result = await ApiService.rsvpToEvent(eventId);
-    if (mounted) {
-      if (result['success'] == true) {
-        setState(() => _rsvpedEvents.add(eventId));
-      } else {
-        setState(() => _rsvpedEvents.add(eventId));
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
-          backgroundColor: result['success'] == true
-              ? const Color(0xFF059669)
-              : Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+    final bool isRsvped = _rsvpedEvents.contains(eventId);
+
+    if (isRsvped) {
+      // Cancel RSVP
+      final result = await ApiService.cancelRsvp(eventId);
+      if (mounted) {
+        if (result['success'] == true) {
+          setState(() => _rsvpedEvents.remove(eventId));
+          _loadEvents(); // Refresh to get updated counts
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: result['success'] == true
+                ? const Color(0xFF059669)
+                : Colors.orange.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-        ),
-      );
+        );
+      }
+    } else {
+      // RSVP
+      final result = await ApiService.rsvpToEvent(eventId);
+      if (mounted) {
+        if (result['success'] == true) {
+          setState(() => _rsvpedEvents.add(eventId));
+          _loadEvents(); // Refresh to get updated counts
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: result['success'] == true
+                ? const Color(0xFF059669)
+                : Colors.orange.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -375,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(
                     height: 38,
                     child: ElevatedButton.icon(
-                      onPressed: hasRSVPed ? null : () => _handleRSVP(event.id),
+                      onPressed: () => _handleRSVP(event.id),
                       icon: Icon(
                         hasRSVPed
                             ? Icons.check_circle_rounded
