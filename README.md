@@ -33,6 +33,9 @@ This project demonstrates a modern cloud architecture using a serverless backend
 3.  **Compute Layer:** AWS Lambda functions execute the Node.js logic on-demand (Parallel Distributed Systems).
 4.  **Data Layer:** MongoDB stores user profiles, event details, and RSVP connections. External calls are made to the Gemini API for the AI features.
 
+[Download Mobile App for users - Android Version](https://drive.google.com/file/d/1oJlj49qroZ8wGsQfhOIk2c4VSQwVJqQ2/view?usp=sharing) <br>
+[Live Admin Site - Where Admin/Organizers can manage everything!]()
+
 👨‍💻 Author! <br>
 Mubashar Ghazi <br> [LinkedIn](https://www.linkedin.com/in/mubasharghazi/)
 [Website](https://mubasharghazi.dev/)
